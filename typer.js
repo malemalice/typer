@@ -98,10 +98,11 @@ var TyperView = Backbone.View.extend({
 			.css({
 				'border-radius':'4px',
 				position:'absolute',
-				bottom:'50',
+				bottom:'0',
 				'min-width':'5%',
 				width:'5%',
-				// 'margin-bottom':'50px',
+				right:'55%',
+				'margin-bottom':'50px',
 				'z-index':'1000'
 			}).data('current',true)
 			.on('click',function(){
@@ -122,11 +123,12 @@ var TyperView = Backbone.View.extend({
 			.css({
 				'border-radius':'4px',
 				position:'absolute',
-				bottom:'50',
+				bottom:'0',
 				'min-width':'5%',
 				width:'5%',
+				right:'45%',
 				'margin-left':'100px',
-				// 'margin-bottom':'50px',
+				'margin-bottom':'50px',
 				'z-index':'1000'
 			})
 			.data('current',true)
