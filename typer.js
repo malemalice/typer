@@ -31,12 +31,12 @@ var WordView = Backbone.View.extend({
 					})
 					.text(string.charAt(i).toUpperCase()));
 		}
-		
+
 		this.listenTo(this.model, 'remove', this.remove);
-		
+
 		this.render();
 	},
-	
+
 	render:function() {
 		$(this.el).css({
 			top:this.model.get('y') + 'px',
@@ -64,7 +64,7 @@ var TyperView = Backbone.View.extend({
 				height:'100%'
 			});
 		this.wrapper = wrapper;
-		
+
 		var self = this;
 		var text_input = $('<input>')
 			.addClass('form-control')
@@ -92,7 +92,48 @@ var TyperView = Backbone.View.extend({
 					}
 				}
 			});
-		
+
+			var start_button = $('<button>Start</button>')
+			.addClass('form-control')
+			.css({
+				'border-radius':'4px',
+				position:'absolute',
+				bottom:'50',
+				'min-width':'5%',
+				width:'5%',
+				// 'margin-bottom':'50px',
+				'z-index':'1000'
+			}).on('click',function(){
+				self.model.start();
+				console.log('start');
+			});
+
+			var pause_button = $('<button>Pause</button>')
+			.addClass('form-control')
+			.css({
+				'border-radius':'4px',
+				position:'absolute',
+				bottom:'50',
+				'min-width':'5%',
+				width:'5%',
+				'margin-left':'100px',
+				// 'margin-bottom':'50px',
+				'z-index':'1000'
+			})
+			.data('current',true)
+			.on('click',function(){
+				if($(this).data('current')==true){
+					self.model.pause();
+					$(this).data('current',false).text('Resume');
+				}else{
+					self.model.resume();
+					$(this).data('current',true).text('Pause');
+				}
+				// console.log();
+				console.log('pause');
+			});
+			// var action_button = start_button+pause_button;
+
 		$(this.el)
 			.append(wrapper
 				.append($('<form>')
@@ -102,18 +143,18 @@ var TyperView = Backbone.View.extend({
 					.submit(function() {
 						return false;
 					})
-					.append(text_input)));
-		
+					.append(start_button,pause_button,text_input)));
+
 		text_input.css({left:((wrapper.width() - text_input.width()) / 2) + 'px'});
 		text_input.focus();
-		
+
 		this.listenTo(this.model, 'change', this.render);
 	},
-	
+
 	render: function() {
 		var model = this.model;
 		var words = model.get('words');
-		
+
 		for(var i = 0;i < words.length;i++) {
 			var word = words.at(i);
 			if(!word.get('view')) {
@@ -139,8 +180,9 @@ var Typer = Backbone.Model.extend({
 		words:new Words(),
 		min_speed:1,
 		max_speed:5,
+		setinterval:null
 	},
-	
+
 	initialize: function() {
 		new TyperView({
 			model: this,
@@ -151,11 +193,29 @@ var Typer = Backbone.Model.extend({
 	start: function() {
 		var animation_delay = 100;
 		var self = this;
-		setInterval(function() {
+		// setInterval(function() {
+		// 	self.iterate();
+		// },animation_delay);
+
+		this.setinterval = setInterval(function() {
 			self.iterate();
 		},animation_delay);
+		this.setinterval;
 	},
-	
+
+	stop: function(){
+	},
+
+	pause: function(){
+		clearInterval(this.setinterval);
+	},
+
+	resume: function(){
+		console.log('resume on model');
+		this.start();
+		// console.log(this.setinterval());
+	},
+
 	iterate: function() {
 		var words = this.get('words');
 		if(words.length < this.get('max_num_words')) {
@@ -168,7 +228,7 @@ var Typer = Backbone.Model.extend({
 					top_most_word = word;
 				}
 			}
-			
+
 			if(!top_most_word || top_most_word.get('y') > this.get('min_distance_between_words')) {
 				var random_company_name_index = this.random_number_from_interval(0,company_names.length - 1);
 				var string = company_names[random_company_name_index];
@@ -178,7 +238,7 @@ var Typer = Backbone.Model.extend({
 						filtered_string += string.charAt(j);
 					}
 				}
-				
+
 				var word = new Word({
 					x:this.random_number_from_interval(0,$(window).width()),
 					y:0,
@@ -188,28 +248,28 @@ var Typer = Backbone.Model.extend({
 				words.add(word);
 			}
 		}
-		
+
 		var words_to_be_removed = [];
 		for(var i = 0;i < words.length;i++) {
 			var word = words.at(i);
 			word.move();
-			
+
 			if(word.get('y') > $(window).height() || word.get('move_next_iteration')) {
 				words_to_be_removed.push(word);
 			}
-			
+
 			if(word.get('highlight') && word.get('string').length == word.get('highlight')) {
 				word.set({move_next_iteration:true});
 			}
 		}
-		
+
 		for(var i = 0;i < words_to_be_removed.length;i++) {
 			words.remove(words_to_be_removed[i]);
 		}
-		
+
 		this.trigger('change');
 	},
-	
+
 	random_number_from_interval: function(min,max) {
 	    return Math.floor(Math.random()*(max-min+1)+min);
 	}
