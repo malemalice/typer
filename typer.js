@@ -93,7 +93,7 @@ var TyperView = Backbone.View.extend({
 				}
 			});
 
-			var start_button = $('<button>Start</button>')
+			var start_button = $('<button id="start">Start</button>')
 			.addClass('form-control')
 			.css({
 				'border-radius':'4px',
@@ -103,12 +103,21 @@ var TyperView = Backbone.View.extend({
 				width:'5%',
 				// 'margin-bottom':'50px',
 				'z-index':'1000'
-			}).on('click',function(){
-				self.model.start();
+			}).data('current',true)
+			.on('click',function(){
 				console.log('start');
+				if($(this).data('current')==true){
+					self.model.start();
+					$(this).data('current',false).text('Stop');
+					$('#pause').removeAttr('disabled');
+				}else{
+					self.model.stop();
+					$(this).data('current',true).text('Start');
+					$('#pause').attr('disabled','disabled').data('current',true).text('Pause');
+				}
 			});
 
-			var pause_button = $('<button>Pause</button>')
+			var pause_button = $('<button id="pause">Pause</button>')
 			.addClass('form-control')
 			.css({
 				'border-radius':'4px',
@@ -121,6 +130,7 @@ var TyperView = Backbone.View.extend({
 				'z-index':'1000'
 			})
 			.data('current',true)
+			.attr('disabled','disabled')
 			.on('click',function(){
 				if($(this).data('current')==true){
 					self.model.pause();
@@ -204,6 +214,11 @@ var Typer = Backbone.Model.extend({
 	},
 
 	stop: function(){
+		this.pause();
+		var words = this.get('words');
+		_.each(_.clone(words.models), function(model) {
+			  model.destroy();
+			});
 	},
 
 	pause: function(){
@@ -265,6 +280,7 @@ var Typer = Backbone.Model.extend({
 
 		for(var i = 0;i < words_to_be_removed.length;i++) {
 			words.remove(words_to_be_removed[i]);
+			console.log(words_to_be_removed[i]);
 		}
 
 		this.trigger('change');
