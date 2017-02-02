@@ -105,7 +105,7 @@ var TyperView = Backbone.View.extend({
 				}
 			});
 
-			var score_label = $('<p>Score:</p>')
+			var score_label = $('<p>Score:<span id="scorespan"></span></p>')
 				.addClass('form-control')
 				.css({
 					'border-radius':'4px',
@@ -139,7 +139,6 @@ var TyperView = Backbone.View.extend({
 	render: function() {
 		var model = this.model;
 		var words = model.get('words');
-
 		for(var i = 0;i < words.length;i++) {
 			var word = words.at(i);
 			if(!word.get('view')) {
@@ -231,6 +230,7 @@ var Typer = Backbone.Model.extend({
 				var current_score = scores.at(0).get('score');
 				scores.set({score:100+current_score});
 				console.log(current_score);
+				$('#scorespan').html(scores.at(0).get('score'));
 				word.set({move_next_iteration:true});
 			}
 		}
@@ -239,6 +239,7 @@ var Typer = Backbone.Model.extend({
 			console.log('ga keburu coy');
 			var current_score = scores.at(0).get('score');
 			scores.set({score:current_score-50});
+			$('#scorespan').html(scores.at(0).get('score'));
 			console.log(current_score);
 			words.remove(words_to_be_removed[i]);
 		}
