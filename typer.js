@@ -8,6 +8,10 @@ var Words = Backbone.Collection.extend({
 	model:Word
 });
 
+var Score = Backbone.Model.extend({ defaults: { score: 0} });
+var Scores = Backbone.Collection.extend({
+	model:Score
+});
 var WordView = Backbone.View.extend({
 	initialize: function() {
 		$(this.el).css({position:'absolute'});
@@ -31,12 +35,12 @@ var WordView = Backbone.View.extend({
 					})
 					.text(string.charAt(i).toUpperCase()));
 		}
-		
+
 		this.listenTo(this.model, 'remove', this.remove);
-		
+
 		this.render();
 	},
-	
+
 	render:function() {
 		$(this.el).css({
 			top:this.model.get('y') + 'px',
@@ -64,8 +68,12 @@ var TyperView = Backbone.View.extend({
 				height:'100%'
 			});
 		this.wrapper = wrapper;
-		
+
+
 		var self = this;
+		var score = self.model.get('scores');
+		score.set({score:0});
+
 		var text_input = $('<input>')
 			.addClass('form-control')
 			.css({
@@ -77,6 +85,10 @@ var TyperView = Backbone.View.extend({
 				'margin-bottom':'10px',
 				'z-index':'1000'
 			}).keyup(function() {
+				// var score = self.model.get('scores');
+				// score.set({score:10});
+				// console.log(score.at(0).get('score'));
+
 				var words = self.model.get('words');
 				for(var i = 0;i < words.length;i++) {
 					var word = words.at(i);
@@ -92,7 +104,21 @@ var TyperView = Backbone.View.extend({
 					}
 				}
 			});
-		
+
+			var score_label = $('<p>Score:</p>')
+				.addClass('form-control')
+				.css({
+					'border-radius':'4px',
+					position:'absolute',
+					// bottom:'0',
+					'min-width':'10%',
+					width:'10%',
+					// 'margin-bottom':'10px',
+					'z-index':'1000'
+				}).keyup(function() {
+
+				});
+
 		$(this.el)
 			.append(wrapper
 				.append($('<form>')
@@ -102,18 +128,18 @@ var TyperView = Backbone.View.extend({
 					.submit(function() {
 						return false;
 					})
-					.append(text_input)));
-		
+					.append(text_input,score_label)));
+
 		text_input.css({left:((wrapper.width() - text_input.width()) / 2) + 'px'});
 		text_input.focus();
-		
+
 		this.listenTo(this.model, 'change', this.render);
 	},
-	
+
 	render: function() {
 		var model = this.model;
 		var words = model.get('words');
-		
+
 		for(var i = 0;i < words.length;i++) {
 			var word = words.at(i);
 			if(!word.get('view')) {
@@ -137,10 +163,11 @@ var Typer = Backbone.Model.extend({
 		max_num_words:10,
 		min_distance_between_words:50,
 		words:new Words(),
+		scores: new Scores(),
 		min_speed:1,
 		max_speed:5,
 	},
-	
+
 	initialize: function() {
 		new TyperView({
 			model: this,
@@ -155,7 +182,7 @@ var Typer = Backbone.Model.extend({
 			self.iterate();
 		},animation_delay);
 	},
-	
+
 	iterate: function() {
 		var words = this.get('words');
 		if(words.length < this.get('max_num_words')) {
@@ -168,7 +195,7 @@ var Typer = Backbone.Model.extend({
 					top_most_word = word;
 				}
 			}
-			
+
 			if(!top_most_word || top_most_word.get('y') > this.get('min_distance_between_words')) {
 				var random_company_name_index = this.random_number_from_interval(0,company_names.length - 1);
 				var string = company_names[random_company_name_index];
@@ -178,7 +205,7 @@ var Typer = Backbone.Model.extend({
 						filtered_string += string.charAt(j);
 					}
 				}
-				
+
 				var word = new Word({
 					x:this.random_number_from_interval(0,$(window).width()),
 					y:0,
@@ -188,28 +215,37 @@ var Typer = Backbone.Model.extend({
 				words.add(word);
 			}
 		}
-		
+
 		var words_to_be_removed = [];
+		var scores = this.get('scores');
 		for(var i = 0;i < words.length;i++) {
 			var word = words.at(i);
 			word.move();
-			
+
 			if(word.get('y') > $(window).height() || word.get('move_next_iteration')) {
 				words_to_be_removed.push(word);
 			}
-			
+
 			if(word.get('highlight') && word.get('string').length == word.get('highlight')) {
+				console.log('bener coy');
+				var current_score = scores.at(0).get('score');
+				scores.set({score:100+current_score});
+				console.log(current_score);
 				word.set({move_next_iteration:true});
 			}
 		}
-		
+
 		for(var i = 0;i < words_to_be_removed.length;i++) {
+			console.log('ga keburu coy');
+			var current_score = scores.at(0).get('score');
+			scores.set({score:current_score-50});
+			console.log(current_score);
 			words.remove(words_to_be_removed[i]);
 		}
-		
+
 		this.trigger('change');
 	},
-	
+
 	random_number_from_interval: function(min,max) {
 	    return Math.floor(Math.random()*(max-min+1)+min);
 	}
