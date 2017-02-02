@@ -117,7 +117,7 @@ var TyperView = Backbone.View.extend({
 				'z-index':'1000'
 			}).data('current',true)
 			.on('click',function(){
-				console.log('start');
+				// console.log('start');
 				if($(this).data('current')==true){
 					self.model.start();
 					$(this).data('current',false).text('Stop');
@@ -153,7 +153,7 @@ var TyperView = Backbone.View.extend({
 					$(this).data('current',true).text('Pause');
 				}
 				// console.log();
-				console.log('pause');
+				// console.log('pause');
 			});
 			var score_label = $('<p>Score:<span id="scorespan"></span></p>')
 				.addClass('form-control')
